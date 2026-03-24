@@ -47,7 +47,7 @@ export default function UploadPage() {
       toast.success(`"${title}" uploaded successfully! 🎉`);
       router.push('/dashboard/documents');
     } catch (err) {
-      handleApiError(err, 'Upload failed');
+      toast.error(handleApiError(err, 'Upload failed'));
     } finally {
       setUploading(false);
     }

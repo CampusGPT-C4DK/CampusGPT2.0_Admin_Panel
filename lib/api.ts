@@ -238,11 +238,19 @@ export const chatAPI = {
 // ============================================
 // ERROR HANDLING
 // ============================================
-export const handleApiError = (error: unknown): string => {
+export const handleApiError = (error: unknown, context?: string): string => {
+  let message = '';
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.detail || error.message || 'An error occurred';
+    message = error.response?.data?.detail || error.message || 'An error occurred';
+  } else {
+    message = 'An unexpected error occurred';
   }
-  return 'An unexpected error occurred';
+  
+  // If context provided, prepend it to message
+  if (context) {
+    return `${context}: ${message}`;
+  }
+  return message;
 };
 
 export default api;
