@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { adminAPI, handleApiError } from '@/lib/api';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import {
   Send, Bot, User, Zap, Clock, BarChart2, X,
@@ -283,7 +284,7 @@ export default function ChatPage() {
             style={{
               display: 'flex',
               flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-              gap: '12px',
+              gap: '14px',
               alignItems: 'flex-start',
               maxWidth: '900px',
               width: '100%',

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { adminAPI, handleApiError } from '@/lib/api';
 import { Document, DocumentProgress } from '@/lib/types';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import {
   Upload, Trash2, RefreshCw, FileText, Plus,
@@ -302,6 +304,7 @@ function formatSize(bytes?: number) {
 
 // ─── Main component ───────────────────────────
 export default function DocumentsPage() {
+  const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -423,6 +426,7 @@ export default function DocumentsPage() {
   return (
     <div>
       {/* Progress modal (shows after upload) */}
+
       {trackingDoc && (
         <UploadProgressModal
           documentId={trackingDoc.id}
@@ -442,17 +446,14 @@ export default function DocumentsPage() {
                 {processingCount} processing
               </div>
             )}
-            <button onClick={() => setUploadMode('batch')} className="btn-secondary" style={{ fontSize: '13px', padding: '8px 14px' }}>
-              <UploadCloud size={14} /> Batch Upload
-            </button>
-            <button onClick={() => setUploadMode('single')} className="btn-primary" style={{ fontSize: '13px', padding: '8px 14px' }}>
-              <Plus size={14} /> Upload Document
+            <button onClick={() => router.push('/dashboard/documents/upload')} className="btn-primary" style={{ fontSize: '13px', padding: '8px 14px' }}>
+              <Plus size={14} /> Upload Documents
             </button>
           </div>
         }
       />
 
-      <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         {/* ── Single Upload Panel ── */}
         {uploadMode === 'single' && (
@@ -743,7 +744,7 @@ export default function DocumentsPage() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

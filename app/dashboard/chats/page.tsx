@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { chatAPI, handleApiError } from '@/lib/api';
 import { ChatHistory } from '@/lib/types';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import {
   MessageSquare, Search, Filter, ChevronLeft, ChevronRight,
