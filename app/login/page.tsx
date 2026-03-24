@@ -2,9 +2,92 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, Zap, Shield, BarChart3 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, Lock, Mail, Zap, Shield, BarChart3, ArrowRight, Brain, Sparkles } from 'lucide-react';
 import { toast } from 'react-toastify';
 
+/* ─── AURORA MESH ─── */
+function AuroraMesh() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      <motion.div
+        animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute', top: '-10%', left: '-10%',
+          width: '500px', height: '500px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59,130,246,0.08), transparent 65%)',
+          filter: 'blur(60px)',
+        }}
+      />
+      <motion.div
+        animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute', bottom: '-15%', right: '-5%',
+          width: '450px', height: '450px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(167,139,250,0.06), transparent 65%)',
+          filter: 'blur(80px)',
+        }}
+      />
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute', top: '35%', left: '50%', transform: 'translate(-50%,-50%)',
+          width: '300px', height: '300px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(34,211,238,0.04), transparent)',
+          filter: 'blur(60px)',
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─── FLOATING DASHBOARD CARD ─── */
+function FloatingCard() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, rotate: 2 }}
+      animate={{ opacity: 1, y: 0, rotate: 2 }}
+      transition={{ duration: 0.8, delay: 0.8 }}
+      style={{
+        width: '280px', padding: '20px', borderRadius: '16px',
+        background: 'linear-gradient(145deg, rgba(23,28,37,0.9), rgba(15,19,29,0.95))',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(96,165,250,0.05)',
+        transform: 'rotate(2deg)',
+      }}
+    >
+      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', marginBottom: '12px' }}>Live Stats</div>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '14px' }}>
+        {[
+          { val: '1.2K', label: 'Docs', color: '#60a5fa' },
+          { val: '89%', label: 'Acc', color: '#34d399' },
+        ].map((s, i) => (
+          <div key={i} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: `${s.color}08`, border: `1px solid ${s.color}12` }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: s.color }}>{s.val}</div>
+            <div style={{ fontSize: '9px', color: '#475569' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '40px' }}>
+        {[30, 55, 40, 70, 50, 80, 60].map((h, i) => (
+          <motion.div
+            key={i}
+            initial={{ height: 0 }}
+            animate={{ height: `${h}%` }}
+            transition={{ duration: 0.5, delay: 1.2 + i * 0.08 }}
+            style={{ flex: 1, borderRadius: '3px', backgroundImage: 'linear-gradient(to top, #3b82f6, #7c3aed)', opacity: 0.7 }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ═════════════════════════ MAIN LOGIN ═════════════════════════ */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -12,6 +95,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -29,12 +113,10 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.detail || 'Login failed');
-      }
+      if (!res.ok) throw new Error(data.detail || 'Login failed');
 
-      if (!['admin', 'super_admin'].includes(data.user?.role)) {
-        throw new Error('Access denied. Admin role required.');
+      if (!['admin', 'faculty', 'super_admin'].includes(data.user?.role)) {
+        throw new Error('Access denied. Admin or Faculty role required.');
       }
 
       localStorage.setItem('access_token', data.access_token);
@@ -50,50 +132,50 @@ export default function LoginPage() {
     }
   };
 
-  const features = [
-    { icon: BarChart3, label: 'Real-time Analytics', desc: 'Monitor system performance' },
-    { icon: Shield, label: 'Secure Management', desc: 'JWT-protected endpoints' },
-    { icon: Zap, label: 'AI-Powered', desc: 'LLM integration & monitoring' },
+  const featurePills = [
+    { icon: BarChart3, label: 'Real-time Analytics' },
+    { icon: Shield, label: 'Enterprise Security' },
+    { icon: Sparkles, label: 'AI-Powered Engine' },
   ];
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 1 }}>
-      {/* Left Panel */}
-      <div style={{
-        flex: '0 0 45%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '60px 48px',
-        background: 'linear-gradient(145deg, rgba(17,24,39,0.98), rgba(7,11,20,0.99))',
-        borderRight: '1px solid rgba(99,179,237,0.08)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Decorative circles */}
+
+      {/* ═══ LEFT PANEL ═══ */}
+      <motion.div
+        initial={{ opacity: 0, x: -24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7 }}
+        style={{
+          flex: '0 0 50%', display: 'flex', flexDirection: 'column',
+          justifyContent: 'center', padding: '56px 52px',
+          background: 'linear-gradient(160deg, rgba(15,19,29,0.99), rgba(10,14,23,1))',
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        <AuroraMesh />
+
+        {/* Grid overlay */}
         <div style={{
-          position: 'absolute', top: '-100px', left: '-100px',
-          width: '400px', height: '400px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-100px', right: '-100px',
-          width: '350px', height: '350px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(167,139,250,0.06) 0%, transparent 70%)',
-          pointerEvents: 'none',
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'linear-gradient(rgba(96,165,250,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,0.018) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse at center, black 25%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 25%, transparent 75%)',
         }} />
 
         {/* Logo */}
-        <div style={{ marginBottom: '60px', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          style={{ marginBottom: '56px', position: 'relative', zIndex: 1 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '44px', height: '44px', borderRadius: '12px',
-              background: 'linear-gradient(135deg, #3b82f6, #7c3aed)',
+              width: '46px', height: '46px', borderRadius: '14px',
+              backgroundImage: 'linear-gradient(135deg, #3b82f6, #7c3aed)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(59,130,246,0.4)',
+              boxShadow: '0 0 28px rgba(59,130,246,0.4)',
             }}>
               <Zap size={22} color="white" />
             </div>
@@ -101,198 +183,253 @@ export default function LoginPage() {
               <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em' }}>
                 Campus<span className="gradient-text">GPT</span>
               </div>
-              <div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '10px', color: '#475569', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: '600' }}>
                 Admin Console
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
+        {/* Heading */}
         <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <h1 style={{
-            fontSize: '40px', fontWeight: '900',
-            lineHeight: '1.15', letterSpacing: '-0.03em',
-            marginBottom: '16px',
-          }}>
-            Welcome to the<br />
-            <span className="gradient-text">Control Center</span>
-          </h1>
-          <p style={{ fontSize: '15px', color: '#64748b', lineHeight: '1.6', marginBottom: '48px', maxWidth: '320px' }}>
-            Manage documents, monitor AI interactions, and control your CampusGPT system from one powerful dashboard.
-          </p>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.6 }}>
+            <h1 style={{ fontSize: '42px', fontWeight: '900', lineHeight: '1.08', letterSpacing: '-0.04em', marginBottom: '18px' }}>
+              Welcome to the{' '}
+              <span style={{
+                display: 'block',
+                backgroundImage: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #22d3ee 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>
+                Intelligence Hub
+              </span>
+            </h1>
+            <p style={{ fontSize: '15px', color: '#64748b', lineHeight: '1.7', marginBottom: '36px', maxWidth: '360px' }}>
+              Manage documents, monitor AI interactions, and control your CampusGPT system from one powerful dashboard.
+            </p>
+          </motion.div>
 
-          {/* Features */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {features.map((f, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                  animationDelay: `${i * 0.1}s`,
-                  opacity: mounted ? 1 : 0,
-                  transform: mounted ? 'translateX(0)' : 'translateX(-20px)',
-                  transition: `all 0.4s ease ${i * 0.1}s`,
-                }}
-              >
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
-                  background: 'rgba(59,130,246,0.1)',
-                  border: '1px solid rgba(59,130,246,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <f.icon size={18} color="#60a5fa" />
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#f0f4ff' }}>{f.label}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{f.desc}</div>
-                </div>
+          {/* Feature pills */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.5 }}
+            style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '40px' }}
+          >
+            {featurePills.map((f, i) => (
+              <div key={i} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '7px',
+                padding: '8px 14px', borderRadius: '10px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                fontSize: '12px', fontWeight: '600', color: '#94a3b8',
+              }}>
+                <f.icon size={13} color="#60a5fa" /> {f.label}
               </div>
             ))}
-          </div>
+          </motion.div>
+
+          {/* Floating dashboard card */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
+            style={{ position: 'relative', zIndex: 1 }}
+          >
+            <FloatingCard />
+          </motion.div>
         </div>
 
-        {/* Bottom version */}
-        <div style={{ fontSize: '12px', color: '#334155', position: 'relative', zIndex: 1 }}>
+        {/* Version */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
+          style={{ fontSize: '11px', color: '#334155', position: 'relative', zIndex: 1 }}>
           CampusGPT v2.0 • Production Ready
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Right Panel - Login Form */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px',
-        background: 'rgba(7, 11, 20, 0.6)',
-        backdropFilter: 'blur(10px)',
-      }}>
+      {/* ═══ RIGHT PANEL — LOGIN FORM ═══ */}
+      <motion.div
+        initial={{ opacity: 0, x: 24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7 }}
+        style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '48px',
+          background: 'rgba(10,14,23,0.6)',
+          backdropFilter: 'blur(10px)',
+          position: 'relative',
+        }}
+      >
+        {/* Subtle glow */}
         <div style={{
-          width: '100%', maxWidth: '420px',
-          opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.5s ease',
-        }}>
+          position: 'absolute', top: '25%', right: '25%',
+          width: '280px', height: '280px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59,130,246,0.035), transparent)',
+          pointerEvents: 'none',
+        }} />
+
+        <motion.div
+          initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }}
+          style={{ width: '100%', maxWidth: '420px' }}
+        >
+          {/* Heading */}
           <div style={{ marginBottom: '36px' }}>
-            <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.02em', marginBottom: '8px' }}>
-              Sign in
+            <h2 style={{ fontSize: '30px', fontWeight: '900', letterSpacing: '-0.03em', marginBottom: '8px' }}>
+              Sign{' '}
+              <span style={{
+                backgroundImage: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>in</span>
             </h2>
-            <p style={{ fontSize: '14px', color: '#64748b' }}>
-              Enter your admin credentials to access the panel
-            </p>
+            <p style={{ fontSize: '14px', color: '#64748b' }}>Enter your admin credentials to access the panel</p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
             {/* Email */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#94a3b8', marginBottom: '8px' }}>
-                Email Address
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{
-                  position: 'absolute', left: '14px', top: '50%',
-                  transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none',
+              <label style={{
+                display: 'block', fontSize: '12px', fontWeight: '600',
+                color: focusedField === 'email' ? '#60a5fa' : '#94a3b8',
+                marginBottom: '8px', transition: 'color 0.2s', letterSpacing: '0.03em',
+              }}>Email Address</label>
+              <div style={{
+                position: 'relative', borderRadius: '12px',
+                backgroundColor: focusedField === 'email' ? 'rgba(96,165,250,0.04)' : 'rgba(10,14,23,0.8)',
+                borderWidth: '1px', borderStyle: 'solid',
+                borderColor: focusedField === 'email' ? 'rgba(96,165,250,0.3)' : 'rgba(255,255,255,0.06)',
+                boxShadow: focusedField === 'email' ? '0 0 0 3px rgba(96,165,250,0.07)' : 'none',
+                transition: 'all 0.3s ease',
+              }}>
+                <Mail size={15} style={{
+                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
+                  color: focusedField === 'email' ? '#60a5fa' : '#475569', pointerEvents: 'none', transition: 'color 0.2s',
                 }} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@campusgpt.com"
-                  required
-                  className="input-field"
-                  style={{ paddingLeft: '42px' }}
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocusedField('email')} onBlur={() => setFocusedField(null)}
+                  placeholder="admin@campusgpt.com" required
+                  style={{
+                    width: '100%', padding: '13px 14px 13px 42px',
+                    background: 'transparent', border: 'none', outline: 'none',
+                    color: '#f0f4ff', fontSize: '14px', fontFamily: 'Inter, sans-serif', borderRadius: '12px',
+                  }}
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#94a3b8', marginBottom: '8px' }}>
-                Password
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{
-                  position: 'absolute', left: '14px', top: '50%',
-                  transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none',
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{
+                  fontSize: '12px', fontWeight: '600',
+                  color: focusedField === 'password' ? '#60a5fa' : '#94a3b8',
+                  transition: 'color 0.2s', letterSpacing: '0.03em',
+                }}>Password</label>
+                <a href="#" style={{ fontSize: '12px', color: '#22d3ee', textDecoration: 'none', fontWeight: '500' }}
+                   onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                   onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>
+                  Forgot password?
+                </a>
+              </div>
+              <div style={{
+                position: 'relative', borderRadius: '12px',
+                backgroundColor: focusedField === 'password' ? 'rgba(96,165,250,0.04)' : 'rgba(10,14,23,0.8)',
+                borderWidth: '1px', borderStyle: 'solid',
+                borderColor: focusedField === 'password' ? 'rgba(96,165,250,0.3)' : 'rgba(255,255,255,0.06)',
+                boxShadow: focusedField === 'password' ? '0 0 0 3px rgba(96,165,250,0.07)' : 'none',
+                transition: 'all 0.3s ease',
+              }}>
+                <Lock size={15} style={{
+                  position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
+                  color: focusedField === 'password' ? '#60a5fa' : '#475569', pointerEvents: 'none', transition: 'color 0.2s',
                 }} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
+                <input type={showPassword ? 'text' : 'password'} value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••"
-                  required
-                  className="input-field"
-                  style={{ paddingLeft: '42px', paddingRight: '42px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onFocus={() => setFocusedField('password')} onBlur={() => setFocusedField(null)}
+                  placeholder="••••••••••" required
                   style={{
-                    position: 'absolute', right: '14px', top: '50%',
-                    transform: 'translateY(-50%)', background: 'none', border: 'none',
-                    cursor: 'pointer', color: '#64748b', padding: 0,
-                    display: 'flex', alignItems: 'center',
+                    width: '100%', padding: '13px 48px 13px 42px',
+                    background: 'transparent', border: 'none', outline: 'none',
+                    color: '#f0f4ff', fontSize: '14px', fontFamily: 'Inter, sans-serif', borderRadius: '12px',
                   }}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0,
+                    display: 'flex', alignItems: 'center', transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#94a3b8')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
             {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary"
+            <motion.button
+              type="submit" disabled={loading}
+              whileHover={{ scale: loading ? 1 : 1.01 }}
+              whileTap={{ scale: loading ? 1 : 0.99 }}
               style={{
-                width: '100%', padding: '14px',
-                fontSize: '15px', fontWeight: '700',
-                marginTop: '4px',
-                opacity: loading ? 0.7 : 1,
+                width: '100%', padding: '15px', fontSize: '15px', fontWeight: '700', marginTop: '6px',
+                backgroundColor: loading ? 'rgba(59,130,246,0.5)' : undefined,
+                backgroundImage: loading ? 'none' : 'linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #7c3aed 100%)',
+                color: 'white', borderWidth: 0, borderStyle: 'none',
+                borderRadius: '13px',
                 cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                boxShadow: loading ? 'none' : '0 8px 32px rgba(59,130,246,0.3)',
+                transition: 'all 0.3s ease',
               }}
             >
               {loading ? (
                 <>
-                  <div style={{
-                    width: '16px', height: '16px',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTopColor: 'white',
-                    borderRadius: '50%',
-                    animation: 'spin 0.8s linear infinite',
-                  }} />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: '17px', height: '17px',
+                      borderWidth: '2px', borderStyle: 'solid', borderColor: 'rgba(255,255,255,0.3)',
+                      borderTopColor: 'white', borderRadius: '50%',
+                    }}
+                  />
                   Signing in...
                 </>
               ) : (
-                <>
-                  <Shield size={16} />
-                  Sign in to Dashboard
-                </>
+                <>Sign in to Dashboard <ArrowRight size={15} /></>
               )}
-            </button>
+            </motion.button>
           </form>
 
-          {/* Demo credentials notice */}
-          <div style={{
-            marginTop: '28px',
-            padding: '14px 16px',
-            background: 'rgba(96,165,250,0.05)',
-            border: '1px solid rgba(96,165,250,0.12)',
-            borderRadius: '10px',
-          }}>
-            <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6' }}>
-              <span style={{ color: '#60a5fa', fontWeight: '600' }}>Admin access required.</span>
-              {' '}Only users with admin or super_admin role can access this panel. Contact your system administrator for credentials.
+          {/* Admin notice */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.5 }}
+            style={{
+              marginTop: '28px', padding: '14px 16px',
+              backgroundColor: 'rgba(96,165,250,0.04)',
+              borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(96,165,250,0.1)',
+              borderRadius: '12px', display: 'flex', gap: '10px', alignItems: 'flex-start',
+            }}
+          >
+            <Shield size={15} color="#60a5fa" style={{ flexShrink: 0, marginTop: '1px' }} />
+            <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.7' }}>
+              <span style={{ color: '#60a5fa', fontWeight: '700' }}>Admin access required.</span>{' '}
+              Only users with admin or super_admin role can access this panel.
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
 
-      <style jsx global>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+          {/* Back */}
+          <div style={{ textAlign: 'center', marginTop: '22px' }}>
+            <button
+              onClick={() => router.push('/')}
+              style={{
+                background: 'none', border: 'none', color: '#475569',
+                fontSize: '13px', cursor: 'pointer', transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#60a5fa')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#475569')}
+            >
+              ← Back to home
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import {
   Settings, Server, Database, Cpu, Shield, Globe,
@@ -25,8 +27,23 @@ const sections: SettingSection[] = [
 ];
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState('general');
   const [saving, setSaving] = useState(false);
+
+  // Check user role on mount - only admins can access this page
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      router.push('/login');
+      return;
+    }
+    const user = JSON.parse(userData);
+    if (user.role !== 'admin') {
+      toast.error('Admin access required. Redirecting...');
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   const [generalSettings, setGeneralSettings] = useState({
     appName: 'CampusGPT',

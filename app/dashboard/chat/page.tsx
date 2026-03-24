@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { adminAPI, handleApiError } from '@/lib/api';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import {
   Send, Bot, User, Zap, Clock, BarChart2, X,
@@ -83,25 +84,7 @@ export default function ChatPage() {
     setSending(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-      const token = localStorage.getItem('access_token');
-
-      const res = await fetch(`${backendUrl}/api/chat/ask`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          question: q,
-          ...(category ? { category } : {}),
-          include_sources: true,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.detail || 'Failed to get response');
+      const data = await adminAPI.askQuestion(q, category, true);
 
       const assistantMsg: Message = {
         id: (Date.now() + 2).toString(),
@@ -116,14 +99,32 @@ export default function ChatPage() {
 
       setMessages(prev => [...prev.slice(0, -1), assistantMsg]);
     } catch (err: any) {
+      // Extract the actual error message
+      let errorContent = 'An unexpected error occurred';
+      
+      if (typeof err === 'string') {
+        errorContent = err;
+      } else if (err.response?.data?.detail) {
+        errorContent = err.response.data.detail;
+      } else if (err.message) {
+        errorContent = err.message;
+      }
+      
+      console.error('Chat error:', err);
+      
       const errorMsg: Message = {
         id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: err.message || 'Failed to get a response. Please check the backend connection.',
+        content: errorContent,
         timestamp: new Date(),
         isError: true,
       };
       setMessages(prev => [...prev.slice(0, -1), errorMsg]);
+      
+      // Only show toast toast if not a timeout (already handled)
+      if (!errorContent.includes('timeout')) {
+        toast.error(errorContent);
+      }
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -283,7 +284,7 @@ export default function ChatPage() {
             style={{
               display: 'flex',
               flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-              gap: '12px',
+              gap: '14px',
               alignItems: 'flex-start',
               maxWidth: '900px',
               width: '100%',

@@ -145,6 +145,77 @@ export const adminAPI = {
     const response = await api.put(`/api/admin/users/${userId}`, { is_active: isActive });
     return response.data;
   },
+
+  changeUserRole: async (userId: string, role: string): Promise<any> => {
+    const response = await api.patch(`/api/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
+
+  getUserAccess: async (userId: string): Promise<any> => {
+    const response = await api.get(`/api/admin/users/${userId}/access`);
+    return response.data;
+  },
+
+  updateUserAccess: async (userId: string, features: Record<string, boolean>): Promise<any> => {
+    const response = await api.patch(`/api/admin/users/${userId}/access`, { features });
+    return response.data;
+  },
+
+  registerUser: async (userData: { email: string; full_name: string; password: string; role: string }): Promise<any> => {
+    console.log('🌐 [API] registerUser called with:', userData);
+    console.log('🌐 [API] Request details:', {
+      url: '/api/admin/users/register',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    
+    try {
+      const response = await api.post('/api/admin/users/register', userData);
+      console.log('🌐 [API] Response received:', response.status, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('🌐 [API] Request failed:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        error: error.message
+      });
+      throw error;
+    }
+  },
+
+  askQuestion: async (
+    question: string,
+    category?: string,
+    includeSource: boolean = true,
+    timeoutMs: number = 120000 // 120 seconds max
+  ): Promise<{
+    answer: string;
+    confidence_score?: number;
+    confidence_label?: string;
+    response_time_ms?: number;
+    sources?: any[];
+  }> => {
+    try {
+      const response = await api.post('/api/chat/ask', 
+        {
+          question,
+          ...(category ? { category } : {}),
+          include_sources: includeSource,
+        },
+        {
+          timeout: timeoutMs, // Override timeout for this request
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      // Better error handling
+      if (error.code === 'ECONNABORTED' || error.message === 'timeout of ' + timeoutMs + 'ms exceeded') {
+        throw new Error('Request timeout - Backend is still processing. Please try again.');
+      }
+      throw error;
+    }
+  },
 };
 
 // ============================================

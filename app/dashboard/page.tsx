@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { adminAPI, handleApiError } from '@/lib/api';
 import { AdminStats } from '@/lib/types';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import {
   FileText, MessageSquare, Users, Zap,
   TrendingUp, Activity, HardDrive, Clock,
-  ArrowUpRight, Plus, Upload, RefreshCw,
-  CheckCircle, AlertCircle, Server,
+  ArrowUpRight, Upload, RefreshCw,
+  CheckCircle, AlertCircle, Server, Sparkles,
 } from 'lucide-react';
 
 const MOCK_STATS: AdminStats = {
@@ -21,6 +22,16 @@ const MOCK_STATS: AdminStats = {
   avg_response_time_ms: 2150,
   queries_today: 350,
   active_users_now: 24,
+};
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 },
+};
+
+const stagger = {
+  animate: { transition: { staggerChildren: 0.08 } },
 };
 
 export default function DashboardPage() {
@@ -48,7 +59,6 @@ export default function DashboardPage() {
       const data = await adminAPI.getStats();
       setStats(data);
     } catch (err) {
-      // Use mock data if API fails
       setStats(MOCK_STATS);
     } finally {
       setLoading(false);
@@ -69,7 +79,6 @@ export default function DashboardPage() {
           value: stats.total_documents.toLocaleString(),
           icon: FileText,
           change: '+12%',
-          positive: true,
           color: '#60a5fa',
           bgColor: 'rgba(96,165,250,0.08)',
           gradient: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
@@ -79,7 +88,6 @@ export default function DashboardPage() {
           value: (stats.total_chunks || 0).toLocaleString(),
           icon: Zap,
           change: '+18%',
-          positive: true,
           color: '#a78bfa',
           bgColor: 'rgba(167,139,250,0.08)',
           gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
@@ -89,7 +97,6 @@ export default function DashboardPage() {
           value: (stats.total_students || 0).toLocaleString(),
           icon: Users,
           change: '+5%',
-          positive: true,
           color: '#34d399',
           bgColor: 'rgba(52,211,153,0.08)',
           gradient: 'linear-gradient(135deg, #34d399, #059669)',
@@ -99,7 +106,6 @@ export default function DashboardPage() {
           value: (stats.total_chats || 0).toLocaleString(),
           icon: MessageSquare,
           change: '+31%',
-          positive: true,
           color: '#fb923c',
           bgColor: 'rgba(251,146,60,0.08)',
           gradient: 'linear-gradient(135deg, #fb923c, #ea580c)',
@@ -114,21 +120,21 @@ export default function DashboardPage() {
           value: stats.storage_used_mb ? `${(stats.storage_used_mb / 1024).toFixed(1)} GB` : '—',
           icon: HardDrive,
           color: '#22d3ee',
-          sub: `${stats.storage_used_mb?.toLocaleString() || 0} MB`,
+          sub: `${stats.storage_used_mb?.toLocaleString() || 0} MB total`,
         },
         {
           label: 'Avg Response Time',
           value: stats.avg_response_time_ms ? `${(stats.avg_response_time_ms / 1000).toFixed(1)}s` : '—',
           icon: Clock,
           color: '#f472b6',
-          sub: `${stats.avg_response_time_ms} ms`,
+          sub: `${stats.avg_response_time_ms} ms latency`,
         },
         {
           label: 'Queries Today',
           value: (stats.queries_today || 0).toLocaleString(),
           icon: TrendingUp,
           color: '#60a5fa',
-          sub: 'Active interactions',
+          sub: 'Active interactions today',
         },
         {
           label: 'Active Users Now',
@@ -141,10 +147,10 @@ export default function DashboardPage() {
     : [];
 
   const quickActions = [
-    { label: 'Upload Document', icon: Upload, href: '/dashboard/documents', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-    { label: 'View Chat History', icon: MessageSquare, href: '/dashboard/chats', color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
-    { label: 'Manage Users', icon: Users, href: '/dashboard/users', color: '#34d399', bg: 'rgba(52,211,153,0.1)' },
-    { label: 'System Settings', icon: Server, href: '/dashboard/settings', color: '#fb923c', bg: 'rgba(251,146,60,0.1)' },
+    { label: 'Upload Document', icon: Upload, href: '/dashboard/documents', color: '#3b82f6', bg: 'rgba(59,130,246,0.08)' },
+    { label: 'View Chat History', icon: MessageSquare, href: '/dashboard/chats', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)' },
+    { label: 'Manage Users', icon: Users, href: '/dashboard/users', color: '#34d399', bg: 'rgba(52,211,153,0.08)' },
+    { label: 'System Settings', icon: Server, href: '/dashboard/settings', color: '#fb923c', bg: 'rgba(251,146,60,0.08)' },
   ];
 
   const hour = new Date().getHours();
@@ -160,7 +166,7 @@ export default function DashboardPage() {
             onClick={handleRefresh}
             disabled={refreshing}
             className="btn-secondary"
-            style={{ fontSize: '13px', padding: '8px 14px' }}
+            style={{ fontSize: '13px', padding: '8px 16px' }}
           >
             <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
             Refresh
@@ -168,142 +174,192 @@ export default function DashboardPage() {
         }
       />
 
-      <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        {/* Welcome Banner */}
-        <div className="border-gradient" style={{ padding: '1px', borderRadius: '17px' }}>
-          <div style={{
-            borderRadius: '16px',
-            padding: '24px 28px',
-            background: 'linear-gradient(135deg, rgba(17,24,39,0.98) 0%, rgba(13,20,36,0.98) 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <div>
-              <div style={{ fontSize: '13px', color: '#60a5fa', fontWeight: '600', marginBottom: '4px' }}>
-                {greeting} 👋
-              </div>
-              <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.02em', marginBottom: '6px' }}>
-                {user?.full_name || 'Administrator'}
-              </h2>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>
-                Here's what's happening with CampusGPT today
-              </p>
-            </div>
+      <motion.div
+        initial="initial"
+        animate="animate"
+        variants={stagger}
+        style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: '24px' }}
+      >
+        {/* ═══ WELCOME BANNER ═══ */}
+        <motion.div variants={fadeInUp}>
+          <div className="border-gradient" style={{ padding: '1px', borderRadius: '17px' }}>
             <div style={{
-              width: '72px', height: '72px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6, #7c3aed)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '28px', fontWeight: '800', color: 'white',
-              boxShadow: '0 0 30px rgba(59,130,246,0.3)',
+              borderRadius: '16px',
+              padding: '28px 32px',
+              background: 'linear-gradient(135deg, rgba(23,28,37,0.98) 0%, rgba(15,19,29,0.98) 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              position: 'relative', overflow: 'hidden',
             }}>
-              {user?.full_name?.[0]?.toUpperCase() || 'A'}
+              {/* Background pattern */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `
+                  linear-gradient(rgba(96,165,250,0.02) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(96,165,250,0.02) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px',
+                pointerEvents: 'none',
+                maskImage: 'linear-gradient(to right, transparent, black 30%, black 70%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent, black 30%, black 70%, transparent)',
+              }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  fontSize: '13px', color: '#60a5fa', fontWeight: '600', marginBottom: '6px',
+                }}>
+                  <Sparkles size={14} />
+                  {greeting} 👋
+                </div>
+                <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.03em', marginBottom: '6px' }}>
+                  {user?.full_name || 'Administrator'}
+                </h2>
+                <p style={{ fontSize: '14px', color: '#64748b' }}>
+                  Here's what's happening with CampusGPT today
+                </p>
+              </div>
+              <div style={{
+                width: '72px', height: '72px', borderRadius: '20px',
+                background: 'linear-gradient(135deg, #3b82f6, #7c3aed)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '28px', fontWeight: '800', color: 'white',
+                boxShadow: '0 0 30px rgba(59,130,246,0.3)',
+                position: 'relative', zIndex: 1,
+              }}>
+                {user?.full_name?.[0]?.toUpperCase() || 'A'}
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Main Stats */}
-        <div>
-          <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>
-            Overview
-          </h3>
+        {/* ═══ MAIN STATS ═══ */}
+        <motion.div variants={fadeInUp}>
+          <h3 className="section-heading">Overview</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             {loading
               ? Array(4).fill(0).map((_, i) => (
-                  <div key={i} className="glass-card shimmer" style={{ height: '140px', borderRadius: '16px' }} />
+                  <div key={i} className="glass-card shimmer" style={{ height: '150px', borderRadius: '16px' }} />
                 ))
               : statCards.map((card, i) => (
-                  <div key={i} className="glass-card stat-card animate-fade-in" style={{
-                    padding: '20px', animationDelay: `${i * 0.08}s`,
-                  }}>
+                  <motion.div
+                    key={i}
+                    variants={fadeInUp}
+                    className="glass-card stat-card card-shine"
+                    style={{ padding: '22px' }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <div style={{
-                        width: '42px', height: '42px', borderRadius: '12px',
+                        width: '44px', height: '44px', borderRadius: '13px',
                         background: card.bgColor, display: 'flex',
                         alignItems: 'center', justifyContent: 'center',
+                        border: `1px solid ${card.color}20`,
                       }}>
                         <card.icon size={20} color={card.color} />
                       </div>
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: '4px',
-                        background: 'rgba(52,211,153,0.08)',
-                        border: '1px solid rgba(52,211,153,0.15)',
-                        borderRadius: '6px', padding: '3px 8px',
+                        background: 'rgba(52,211,153,0.06)',
+                        border: '1px solid rgba(52,211,153,0.12)',
+                        borderRadius: '8px', padding: '4px 8px',
                       }}>
                         <ArrowUpRight size={11} color="#34d399" />
                         <span style={{ fontSize: '11px', fontWeight: '700', color: '#34d399' }}>{card.change}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.02em', color: '#f0f4ff', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '30px', fontWeight: '800', letterSpacing: '-0.03em', color: '#f0f4ff', marginBottom: '4px' }}>
                       {card.value}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>{card.label}</div>
-                    {/* Bottom bar */}
-                    <div style={{ marginTop: '16px', height: '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.05)' }}>
-                      <div style={{ height: '100%', width: '70%', background: card.gradient, borderRadius: '999px' }} />
+                    <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>{card.label}</div>
+                    {/* Bottom accent bar */}
+                    <div style={{ marginTop: '16px', height: '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.04)' }}>
+                      <motion.div
+                        initial={{ width: '0%' }}
+                        animate={{ width: '70%' }}
+                        transition={{ duration: 1, delay: i * 0.1, ease: 'easeOut' }}
+                        style={{ height: '100%', background: card.gradient, borderRadius: '999px' }}
+                      />
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Metrics + Status Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        {/* ═══ METRICS + STATUS ROW ═══ */}
+        <motion.div variants={fadeInUp} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           {/* Performance Metrics */}
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f4ff', marginBottom: '20px' }}>
+          <div className="glass-card-static" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f4ff', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={16} color="#60a5fa" />
               Performance Metrics
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {loading
                 ? Array(4).fill(0).map((_, i) => (
-                    <div key={i} className="shimmer" style={{ height: '48px', borderRadius: '10px' }} />
+                    <div key={i} className="shimmer" style={{ height: '52px', borderRadius: '12px' }} />
                   ))
                 : metricCards.map((m, i) => (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: '14px',
-                      padding: '12px 14px',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.04)',
-                      borderRadius: '10px',
-                      transition: 'all 0.2s ease',
-                    }}>
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + i * 0.1 }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '14px',
+                        padding: '14px 16px',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.03)',
+                        borderRadius: '12px',
+                        transition: 'all 0.2s ease',
+                        cursor: 'default',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = `${m.color}06`;
+                        e.currentTarget.style.borderColor = `${m.color}15`;
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.03)';
+                      }}
+                    >
                       <div style={{
-                        width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-                        background: `${m.color}15`,
+                        width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0,
+                        background: `${m.color}10`,
+                        border: `1px solid ${m.color}20`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <m.icon size={16} color={m.color} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '2px' }}>{m.label}</div>
-                        <div style={{ fontSize: '12px', color: '#475569' }}>{m.sub}</div>
+                        <div style={{ fontSize: '11px', color: '#475569' }}>{m.sub}</div>
                       </div>
                       <div style={{ fontSize: '20px', fontWeight: '800', color: m.color }}>
                         {m.value}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
             </div>
           </div>
 
-          {/* System Status */}
+          {/* System Status + Quick Actions */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Status Panel */}
-            <div className="glass-card" style={{ padding: '24px', flex: 1 }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f4ff', marginBottom: '20px' }}>
+            <div className="glass-card-static" style={{ padding: '24px', flex: 1 }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f4ff', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Server size={16} color="#34d399" />
                 System Status
               </h3>
               {Object.entries(systemStatus).map(([key, status], i) => (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 0',
-                  borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  padding: '14px 0',
+                  borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.03)' : 'none',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div className={status === 'operational' ? 'pulse-dot' : ''} style={{
                       width: '8px', height: '8px', borderRadius: '50%',
                       background: status === 'operational' ? '#34d399' : '#f87171',
                     }} />
-                    <span style={{ fontSize: '14px', color: '#94a3b8', textTransform: 'capitalize' }}>
+                    <span style={{ fontSize: '14px', color: '#94a3b8', textTransform: 'capitalize', fontWeight: '500' }}>
                       {key.replace(/_/g, ' ')}
                     </span>
                   </div>
@@ -323,7 +379,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="glass-card" style={{ padding: '24px' }}>
+            <div className="glass-card-static" style={{ padding: '24px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#f0f4ff', marginBottom: '16px' }}>
                 Quick Actions
               </h3>
@@ -334,15 +390,15 @@ export default function DashboardPage() {
                     href={action.href}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '10px',
-                      padding: '12px', borderRadius: '10px',
+                      padding: '14px', borderRadius: '12px',
                       background: action.bg,
-                      border: `1px solid ${action.color}20`,
+                      border: `1px solid ${action.color}15`,
                       textDecoration: 'none',
-                      transition: 'all 0.2s ease',
+                      transition: 'all 0.25s ease',
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                      (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 12px ${action.color}20`;
+                      (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 20px ${action.color}15`;
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLElement).style.transform = '';
@@ -358,8 +414,8 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
